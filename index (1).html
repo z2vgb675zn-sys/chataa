@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>google.com</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg-l:#1c1c1e;--bg-r:#2f3649;--green:#06c755;--bub-me:#8de055;--sub:#8e8e93}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input,textarea{font:inherit;color:inherit}
+.app{display:flex;height:100vh;height:100dvh;overflow:hidden}
+.left{width:340px;flex:none;background:var(--bg-l);display:flex;flex-direction:column;border-right:1px solid #000}
+.right{flex:1;min-width:0;background:var(--bg-r);display:flex;flex-direction:column}
+.lhead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px}
+.lhead h1{font-size:22px;margin:0;font-weight:700}
+.brand{font-size:12px;color:var(--sub);letter-spacing:.3px}
+.lbtn{background:var(--green);color:#fff;border-radius:16px;padding:6px 12px;font-size:13px;font-weight:600}
+.searchwrap{padding:4px 14px 10px}
+.search{width:100%;background:#2c2c2e;border:0;border-radius:10px;padding:9px 12px 9px 34px;font-size:14px;outline:none;
+ background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2.2' stroke-linecap='round'><circle cx='11' cy='11' r='7'/><path d='M20 20l-3.5-3.5'/></svg>");background-repeat:no-repeat;background-position:10px center}
+.list{flex:1;overflow-y:auto}
+.item{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer}
+.item:hover{background:#242427}.item.sel{background:#2c2c30}
+.im{flex:1;min-width:0}
+.im .t{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.im .s{font-size:13px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.ie{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none;min-width:36px}
+.tm{font-size:11.5px;color:var(--sub)}
+.badge{background:var(--green);color:#fff;border-radius:10px;min-width:20px;height:20px;padding:0 6px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.av{border-radius:50%;object-fit:cover;display:inline-flex;align-items:center;justify-content:center;flex:none;font-weight:700;line-height:1;user-select:none}
+.grp{background:linear-gradient(135deg,#4facfe,#00c6a7);color:#fff}
+.nav{display:flex;border-top:1px solid #2c2c2e;background:var(--bg-l);padding-bottom:env(safe-area-inset-bottom)}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;font-size:10px;color:var(--sub);position:relative}
+.nav button .ic{font-size:21px;filter:grayscale(1) brightness(.85)}
+.nav button.on{color:#fff}.nav button.on .ic{filter:none}
+.nav .nb{position:absolute;top:3px;left:calc(50% + 6px);background:#ff3b30;color:#fff;border-radius:9px;min-width:17px;height:17px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.rhead{display:flex;align-items:center;gap:8px;padding:12px 14px;background:rgba(0,0,0,.18);min-height:52px}
+.rtitle{font-size:17px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.back{display:none;font-size:30px;line-height:1;padding:0 8px 4px 0}
+.msgs{flex:1;overflow-y:auto;padding:12px 14px 16px}
+.daychip{text-align:center;margin:10px 0}
+.daychip span{background:rgba(0,0,0,.35);border-radius:12px;padding:3px 14px;font-size:12px}
+.row{display:flex;gap:8px;margin:7px 0;align-items:flex-start}
+.row.mine{justify-content:flex-end;align-items:flex-end}
+.avsp{width:40px;flex:none}
+.col{min-width:0;max-width:78%}
+.nm{font-size:12px;color:#dfe3ee;margin:0 0 3px 2px}
+.line{display:flex;align-items:flex-end;gap:6px}
+.bubble{max-width:min(520px,100%);padding:9px 13px;border-radius:18px;font-size:15px;line-height:1.45;word-break:break-word;white-space:pre-wrap;color:#111}
+.row.mine .bubble{background:var(--bub-me);border-top-right-radius:5px;max-width:min(520px,70vw)}
+.row.other .bubble{background:#f2f2f2;border-top-left-radius:5px}
+.bubble.imgonly{background:transparent!important;padding:0}
+.bubble a{color:#0a58ca}
+.pic{max-width:240px;max-height:300px;border-radius:14px;display:block;cursor:zoom-in;background:#0003}
+.bubble .pic+.txt{margin-top:6px}
+.meta{font-size:10.5px;color:#c9ccd6;text-align:right;line-height:1.35;flex:none;white-space:nowrap}
+.composer{display:flex;align-items:flex-end;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:var(--bg-l)}
+.ib{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex:none}
+.ib:hover{background:#2c2c2e}
+.ib svg{width:24px;height:24px;stroke:#d0d0d5;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#inp{flex:1;background:#3a3a3d;border:0;border-radius:20px;padding:9px 14px;font-size:15px;outline:none;resize:none;max-height:120px;line-height:1.4;min-height:38px}
+#inp::placeholder{color:#8e8e93}
+.sendb{width:38px;height:38px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex:none}
+.sendb:disabled{opacity:.45}.sendb svg{width:20px;height:20px;fill:#fff}
+#pend{background:var(--bg-l);padding:8px 14px 0}
+.pendbox{position:relative;display:inline-block}
+.pendbox img{height:84px;border-radius:10px;display:block}
+.pendbox button{position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#555;font-size:14px;line-height:22px}
+.panel{flex:1;overflow-y:auto;padding:18px}
+.card{background:rgba(0,0,0,.22);border-radius:14px;padding:16px;margin-bottom:14px}
+.field{display:block;margin:0 0 12px}
+.field>span{display:block;font-size:12.5px;color:#cfd3df;margin-bottom:5px}
+.field input[type=text],.field input[type=url],.field textarea{width:100%;background:#3a3a3d;border:0;border-radius:10px;padding:10px 12px;font-size:15px;outline:none}
+.field textarea{min-height:140px;resize:vertical;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.btn{background:var(--green);color:#fff;border-radius:22px;padding:10px 20px;font-weight:700;font-size:15px;display:inline-block;text-decoration:none}
+.btn.gray{background:#4a4f5f}.btn.red{background:#d94a4a}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.seg{display:flex;gap:8px;margin-bottom:12px}
+.seg label{flex:1;background:#3a3a3d;border-radius:10px;padding:9px;text-align:center;font-size:14px;cursor:pointer}
+.seg input{display:none}.seg input:checked+span{color:var(--green);font-weight:700}
+.gframe{flex:1;width:100%;border:0;background:#fff}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.presets .av{cursor:pointer;outline:2px solid transparent}.presets .av.on{outline-color:var(--green)}
+.center{text-align:center}
+.muted{color:var(--sub);font-size:13px}
+.gitem .ico{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#ff9a44,#ff5e62);display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+#login{position:fixed;inset:0;background:#111;display:none;align-items:flex-start;justify-content:center;padding:16px;z-index:50;overflow-y:auto}
+#login .box{margin:auto;width:100%;max-width:420px;background:#1c1c1e;border-radius:18px;padding:24px}
+.logo{font-size:30px;font-weight:800;text-align:center;margin-bottom:4px}
+.logo b:nth-child(1){color:#4285f4}.logo b:nth-child(2){color:#ea4335}.logo b:nth-child(3){color:#fbbc05}.logo b:nth-child(4){color:#4285f4}.logo b:nth-child(5){color:#34a853}.logo b:nth-child(6){color:#ea4335}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:40}
+#modal .box{width:100%;max-width:420px;max-height:92vh;overflow-y:auto;background:#1c1c1e;border-radius:18px;padding:22px}
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:60;cursor:zoom-out}
+#lightbox img{max-width:96vw;max-height:94vh}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#000c;padding:10px 16px;border-radius:20px;font-size:14px;display:none;z-index:70;max-width:90vw}
+.welcome{margin:auto;text-align:center;color:#cfd3df}
+@media(max-width:760px){
+ .left{width:100%;border-right:0}.right{display:none}
+ .app.open .left{display:none}.app.open .right{display:flex}
+ .back{display:inline-block}
+ .col{max-width:84%}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="left">
+    <div class="lhead"><h1 id="ltitle">トーク</h1><div id="lact"></div></div>
+    <div class="searchwrap" id="swrap"><input class="search" id="search" placeholder="検索" autocomplete="off"></div>
+    <div class="list" id="list"></div>
+    <nav class="nav">
+      <button data-tab="talk" id="nt"><span class="ic">💬</span>トーク</button>
+      <button data-tab="games" id="ng"><span class="ic">🎮</span>ゲーム</button>
+      <button data-tab="me" id="nm"><span class="ic">👤</span>プロフィール</button>
+    </nav>
+  </aside>
+  <main class="right" id="right"></main>
+</div>
+
+<div id="login"><div class="box">
+  <div class="logo"><b>g</b><b>o</b><b>o</b><b>g</b><b>l</b><b>e</b>.com</div>
+  <p class="muted center" style="margin:0 0 16px">名前とアイコンを決めてはじめよう</p>
+  <label class="field"><span>名前</span><input type="text" id="lname" maxlength="16" placeholder="例：たろう" autocomplete="off"></label>
+  <div class="field"><span>プロフィール画像</span><div id="lpick"></div></div>
+  <div class="center"><button type="button" class="btn" id="lgo">はじめる</button></div>
+  <p class="muted center" id="lerr" style="color:#ff8a80"></p>
+</div></div>
+
+<div id="modal"><div class="box" id="mbox"></div></div>
+<div id="lightbox"><img alt=""></div>
+<div id="toast"></div>
+
+<script>
+const SB_URL='https://hgpwzpmmxgykzmlavbdw.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhncHd6cG1teGd5a3ptbGF2YmR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzMTI0MjQsImV4cCI6MjEwODg4ODQyNH0.i3tmBUTyA9CNa8_y3lfF2F24LayEm-iBdetGQ9cNmCw';
+const _mem={};
+const store={get(k){try{return localStorage.getItem(k)}catch{return _mem[k]??null}},set(k,v){try{localStorage.setItem(k,v)}catch{_mem[k]=v}},del(k){try{localStorage.removeItem(k)}catch{delete _mem[k]}}};
+if(typeof supabase==='undefined'){document.addEventListener('DOMContentLoaded',()=>{document.body.insertAdjacentHTML('beforeend','<div style="position:fixed;inset:0;z-index:99;background:#111;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;line-height:1.8">サーバー用の部品を読み込めませんでした。<br>インターネットに接続して、ページを開き直してください。</div>')})}
+const sb=typeof supabase!=='undefined'?supabase.createClient(SB_URL,SB_KEY):null;
+window.addEventListener('error',e=>{try{const l=document.getElementById('lerr');if(l&&document.getElementById('login').style.display==='flex')l.textContent='エラー：'+e.message}catch{}});
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const hhmm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
+const dayKey=d=>d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();
+const WD='日月火水木金土';
+function dayLabel(d){const t=new Date();if(dayKey(d)===dayKey(t))return'今日';if(dayKey(d)===dayKey(new Date(t.getTime()-864e5)))return'昨日';return`${d.getMonth()+1}月${d.getDate()}日(${WD[d.getDay()]})`}
+function listTime(d){const t=new Date();if(dayKey(d)===dayKey(t))return hhmm(d);if(dayKey(d)===dayKey(new Date(t.getTime()-864e5)))return'昨日';return`${d.getMonth()+1}/${d.getDate()}`}
+const genId=()=>crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)});
+const dmRoom=(a,b)=>'dm:'+[a,b].sort().join(':');
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',3200)}
+
+/* ---------- avatar ---------- */
+const COLORS=['#f4a261','#e76f51','#2a9d8f','#e9c46a','#8d99ae','#6a4c93','#1982c4','#ff595e','#8ac926','#ff924c'];
+const PRESETS=['🐶','🐱','🐼','🦊','🐸','🐵','🐧','🦁','🐯','🐰','🐻','🐨','🦄','🐙','⚽','🎮'];
+function colorOf(id){let h=0;for(const c of String(id||''))h=(h*31+c.charCodeAt(0))>>>0;return COLORS[h%COLORS.length]}
+function av(u,size=40){
+  const a=(u&&u.avatar)||'';const st=`width:${size}px;height:${size}px;`;
+  if(a.startsWith('data:')||a.startsWith('http'))return`<img class="av" style="${st}" src="${esc(a)}" alt="">`;
+  if(a.startsWith('e:')){const[e,c]=a.slice(2).split('|');return`<span class="av" style="${st}background:${esc(c||'#8d99ae')};font-size:${size*.55}px">${esc(e)}</span>`}
+  return`<span class="av" style="${st}background:${colorOf(u&&u.id)};font-size:${size*.45}px;color:#fff">${esc((u&&u.name||'?')[0])}</span>`;
+}
+function presetVal(i){return'e:'+PRESETS[i]+'|'+COLORS[(i*3+1)%COLORS.length]}
+function blobToDataURL(b){return new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)})}
+function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file);const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=u})}
+async function resize(file,max,square,q){
+  const img=await loadImg(file);let sw=img.naturalWidth,sh=img.naturalHeight,sx=0,sy=0,dw,dh;
+  if(square){const m=Math.min(sw,sh);sx=(sw-m)/2;sy=(sh-m)/2;sw=sh=m;dw=dh=max}
+  else{const r=Math.min(1,max/Math.max(sw,sh));dw=Math.round(sw*r);dh=Math.round(sh*r)}
+  const c=document.createElement('canvas');c.width=dw;c.height=dh;
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,dw,dh);x.drawImage(img,sx,sy,sw,sh,0,0,dw,dh);
+  return new Promise(r=>c.toBlob(r,'image/jpeg',q));
+}
+/* avatar picker: el に描画し、state.avatar に選択を入れる */
+function mountPicker(el,state,name){
+  function draw(){
+    el.innerHTML=`<div class="center">${av({id:'x',name:name()||'?',avatar:state.avatar},72)}</div>
+    <div class="presets" style="justify-content:center">${PRESETS.map((p,i)=>`<span data-p="${i}" class="av ${state.avatar===presetVal(i)?'on':''}" style="width:38px;height:38px;font-size:21px;background:${COLORS[(i*3+1)%COLORS.length]}">${p}</span>`).join('')}</div>
+    <div class="center"><label class="btn gray" style="font-size:13px;padding:8px 14px">📷 写真を選ぶ<input type="file" accept="image/*" hidden id="avfile"></label></div>`;
+    el.querySelectorAll('[data-p]').forEach(s=>s.onclick=()=>{state.avatar=presetVal(+s.dataset.p);draw()});
+    el.querySelector('#avfile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{state.avatar=await blobToDataURL(await resize(f,160,true,.85));draw()}catch{toast('画像を読み込めませんでした')}};
+  }
+  draw();return draw;
+}
+
+/* ---------- state ---------- */
+let me=null,users=new Map(),msgs=new Map(),games=[];
+let room='all',tab='talk',view='chat',chatBuilt=false,rtOK=false,pending=null,tick=0,lastMsgHtml='',lastListHtml='';
+
+function relevant(r){return r.room==='all'||String(r.room).includes(me.id)}
+function addMsg(r){
+  const reads=new Set((r.g_reads||[]).map(x=>x.user_id));const ex=msgs.get(r.id);
+  if(ex)reads.forEach(x=>ex.reads.add(x));else{delete r.g_reads;r.reads=reads;msgs.set(r.id,r)}
+}
+async function loadAll(){
+  const[u,m]=await Promise.all([
+    sb.from('g_users').select('*'),
+    sb.from('g_messages').select('*, g_reads(user_id)').or(`room.eq.all,room.like.*${me.id}*`).order('created_at',{ascending:false}).limit(800)
+  ]);
+  if(u.data)users=new Map(u.data.map(x=>[x.id,x]));
+  if(m.data)m.data.forEach(addMsg);
+  renderAll();
+}
+async function loadGames(){
+  const{data}=await sb.from('g_games').select('id,title,description,url,author,created_at').order('created_at',{ascending:false});
+  if(data){games=data;if(tab==='games')renderList()}
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  try{me=JSON.parse(store.get('g_me')||'null')}catch{me=null}
+  if(!me)return showLogin();
+  const{error}=await sb.from('g_users').upsert({id:me.id,name:me.name,avatar:me.avatar},{onConflict:'id'});
+  if(error){store.del('g_me');me=null;return showLogin('この名前は使えません。別の名前にしてください')}
+  startApp();
+}
+let loginState={avatar:presetVal(Math.floor(Math.random()*PRESETS.length))};
+function showLogin(err){
+  $('#login').style.display='flex';$('#lerr').textContent=err||'';
+  mountPicker($('#lpick'),loginState,()=>$('#lname').value.trim());
+  $('#lname').oninput=()=>{const p=$('#lpick .center .av');if(p&&!loginState.avatar.startsWith('e:')&&!loginState.avatar.startsWith('data:')){}};
+}
+let joinName='';
+$('#lname').addEventListener('input',()=>{joinName=''});
+$('#lgo').onclick=async()=>{
+  const name=$('#lname').value.trim();if(!name){$('#lerr').textContent='名前を入力してください';return}
+  $('#lgo').disabled=true;$('#lerr').textContent='';
+  try{
+    const{data:all,error}=await sb.from('g_users').select('*');if(error)throw error;
+    const ex=(all||[]).find(u=>u.name.toLowerCase()===name.toLowerCase());
+    if(ex){
+      if(joinName!==ex.name.toLowerCase()){joinName=ex.name.toLowerCase();$('#lerr').textContent=`「${ex.name}」はすでに使われています。その人として入る場合は、もう一度「はじめる」を押してください。別の名前にするなら名前を変えてね。`;$('#lgo').disabled=false;return}
+      me=ex;
+    }else{
+      me={id:genId(),name,avatar:loginState.avatar};
+      const{error:e2}=await sb.from('g_users').insert(me);if(e2)throw e2;
+    }
+    store.set('g_me',JSON.stringify(me));
+    $('#login').style.display='none';startApp();
+  }catch(e){$('#lerr').textContent='入れませんでした：'+(e.message||e)}
+  $('#lgo').disabled=false;
+};
+async function startApp(){
+  await loadAll();loadGames();
+  sb.channel('g-rt')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'g_messages'},p=>{
+      const r={...p.new};if(!relevant(r))return;addMsg(r);
+      if(!users.has(r.sender))loadAll();else renderAll(false);
+      markRead();
+    })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'g_reads'},p=>{
+      const m=msgs.get(p.new.message_id);if(m){m.reads.add(p.new.user_id);renderAll(false)}
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'g_users'},p=>{
+      if(p.new&&p.new.id){users.set(p.new.id,p.new);renderAll(false)}
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'g_games'},()=>loadGames())
+    .subscribe(s=>{rtOK=(s==='SUBSCRIBED')});
+  setInterval(()=>{tick++;if(!document.hidden&&(!rtOK||tick%8===0))loadAll()},4000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadAll();markRead()}});
+  window.addEventListener('focus',markRead);
+  showChat('all',false);
+}
+
+/* ---------- left pane ---------- */
+function unreadTotal(){let n=0;for(const m of msgs.values())if(m.sender!==me.id&&!m.reads.has(me.id))n++;return n}
+function renderAll(force){renderList();updateNav();if(view==='chat'&&chatBuilt)renderChat(force===true)}
+function updateNav(){
+  const n=unreadTotal();document.title=(n?`(${n}) `:'')+'google.com';
+  $('#nt').innerHTML=`<span class="ic">💬</span>トーク${n?`<span class="nb">${n>99?'99+':n}</span>`:''}`;
+  ['nt','ng','nm'].forEach((id,i)=>$('#'+id).classList.toggle('on',tab===['talk','games','me'][i]));
+}
+function renderList(){
+  updateNav();
+  const q=$('#search').value.trim().toLowerCase();
+  $('#swrap').style.display=tab==='me'?'none':'block';
+  $('#ltitle').innerHTML=({talk:'トーク',games:'ゲーム',me:'プロフィール'})[tab]+' <span class="brand">google.com</span>';
+  $('#lact').innerHTML=tab==='games'?'<button class="lbtn" id="shareBtn">＋ 共有</button>':'';
+  let html='';
+  if(tab==='talk'){
+    const last={},unread={};
+    for(const m of msgs.values()){
+      if(!last[m.room]||m.id>last[m.room].id)last[m.room]=m;
+      if(m.sender!==me.id&&!m.reads.has(me.id))unread[m.room]=(unread[m.room]||0)+1;
+    }
+    const rows=[{id:'all',name:`全体チャット (${users.size})`,user:null}];
+    const others=[...users.values()].filter(u=>u.id!==me.id).map(u=>({id:dmRoom(me.id,u.id),name:u.name,user:u}));
+    others.sort((a,b)=>((last[b.id]?.id)||0)-((last[a.id]?.id)||0)||a.name.localeCompare(b.name));
+    for(const r of rows.concat(others)){
+      if(q&&!r.name.toLowerCase().includes(q))continue;
+      const l=last[r.id];
+      const prev=l?(l.image_url&&!l.body?'📷 写真を送信しました':l.body):'メッセージはまだありません';
+      const who=l&&r.id==='all'&&l.sender!==me.id?((users.get(l.sender)||{}).name||'')+'：':'';
+      const ic=r.user?av(r.user,48):`<span class="av grp" style="width:48px;height:48px;font-size:24px">👥</span>`;
+      html+=`<div class="item ${view==='chat'&&room===r.id?'sel':''}" data-room="${esc(r.id)}">${ic}<div class="im"><div class="t">${esc(r.name)}</div><div class="s">${esc(who+prev)}</div></div><div class="ie"><div class="tm">${l?listTime(new Date(l.created_at)):''}</div>${unread[r.id]?`<div class="badge">${unread[r.id]}</div>`:''}</div></div>`;
+    }
+    if(!others.length)html+='<p class="muted center" style="padding:18px">まだ他の人がいません。<br>友だちにこのサイトを教えよう！</p>';
+  }else if(tab==='games'){
+    const g=games.filter(x=>!q||x.title.toLowerCase().includes(q));
+    html=g.map(x=>{const a=users.get(x.author);return`<div class="item gitem ${view==='game'&&gameSel===x.id?'sel':''}" data-game="${x.id}"><div class="ico">🎮</div><div class="im"><div class="t">${esc(x.title)}</div><div class="s">${esc(a?a.name:'')}・${listTime(new Date(x.created_at))}</div></div></div>`}).join('');
+    if(!g.length)html='<p class="muted center" style="padding:24px">まだゲームがありません。<br>右上の「＋ 共有」から<br>自分が作ったゲームをのせよう！</p>';
+  }else{
+    html=`<div class="center" style="padding:28px 16px">${av(me,96)}<div style="font-size:20px;font-weight:700;margin:12px 0 18px">${esc(me.name)}</div>
+    <button class="btn" id="editMe">プロフィールを編集</button>
+    <div style="margin-top:14px"><button class="btn gray" id="logout" style="font-size:13px;padding:8px 16px">この端末の名前をリセット</button></div></div>`;
+  }
+  if(html!==lastListHtml){$('#list').innerHTML=html;lastListHtml=html}
+}
+$('#search').oninput=()=>{lastListHtml='';renderList()};
+document.querySelector('.nav').onclick=e=>{
+  const b=e.target.closest('[data-tab]');if(!b)return;
+  tab=b.dataset.tab;lastListHtml='';$('#search').value='';
+  if(tab==='games')loadGames();
+  renderList();
+};
+$('#lact').onclick=e=>{if(e.target.closest('#shareBtn'))showShare()};
+$('#list').onclick=e=>{
+  const r=e.target.closest('[data-room]');if(r)return showChat(r.dataset.room,true);
+  const g=e.target.closest('[data-game]');if(g)return openGame(+g.dataset.game);
+  if(e.target.closest('#editMe'))return editProfile();
+  if(e.target.closest('#logout')&&confirm('この端末の名前をリセットします。\n（送ったメッセージは消えません）')){store.del('g_me');location.reload()}
+};
+function openMobile(on){$('#app').classList.toggle('open',on)}
+
+/* ---------- chat ---------- */
+function showChat(r,mobile){
+  room=r;view='chat';if(mobile)openMobile(true);
+  if(!chatBuilt)buildChat();
+  lastMsgHtml='';renderChat(true);markRead();lastListHtml='';renderList();
+}
+function buildChat(){
+  $('#right').innerHTML=`<div class="rhead"><button class="back" id="back">‹</button><div class="rtitle" id="rtitle"></div></div>
+  <div class="msgs" id="msgs"></div><div id="pend"></div>
+  <div class="composer">
+    <label class="ib"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" accept="image/*" capture="environment" hidden id="fcam"></label>
+    <label class="ib"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5.5-5 4 3.5 3-2.5 3.5 3"/></svg><input type="file" accept="image/*" hidden id="fpic"></label>
+    <textarea id="inp" rows="1" placeholder="メッセージを入力"></textarea>
+    <button class="sendb" id="sendBtn" aria-label="送信"><svg viewBox="0 0 24 24"><path d="M3 20.5V3.5L21.5 12z"/></svg></button>
+  </div>`;
+  chatBuilt=true;
+  $('#back').onclick=()=>openMobile(false);
+  const inp=$('#inp');
+  inp.oninput=autosize;
+  inp.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&e.keyCode!==229){e.preventDefault();send()}};
+  inp.onpaste=e=>{const f=[...(e.clipboardData?.files||[])].find(x=>x.type.startsWith('image/'));if(f){e.preventDefault();setPending(f)}};
+  $('#sendBtn').onclick=send;
+  $('#fcam').onchange=$('#fpic').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)setPending(f)};
+  $('#msgs').onclick=e=>{const p=e.target.closest('.pic');if(p){$('#lightbox img').src=p.dataset.src;$('#lightbox').style.display='flex'}};
+}
+function autosize(){const i=$('#inp');i.style.height='auto';i.style.height=Math.min(i.scrollHeight,120)+'px'}
+async function setPending(f){
+  try{const blob=await resize(f,1280,false,.85);pending={blob,url:URL.createObjectURL(blob)};
+    $('#pend').innerHTML=`<div class="pendbox"><img src="${pending.url}"><button id="pclr">×</button></div>`;
+    $('#pclr').onclick=clearPending}catch{toast('画像を読み込めませんでした')}
+}
+function clearPending(){pending=null;const p=$('#pend');if(p)p.innerHTML=''}
+function linkify(t){return t.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')}
+function renderChat(force){
+  const box=$('#msgs');if(!box)return;
+  let title;
+  if(room==='all')title=`全体チャット (${users.size})`;
+  else{const oid=room.split(':').slice(1).find(x=>x!==me.id);title=(users.get(oid)||{}).name||'個人チャット'}
+  $('#rtitle').textContent=title;
+  const list=[...msgs.values()].filter(m=>m.room===room).sort((a,b)=>a.id-b.id);
+  let html='',lastDay='',lastSender=null;
+  if(!list.length)html='<div class="welcome" style="padding:40px 0">まだメッセージがありません。<br>最初のメッセージを送ってみよう！</div>';
+  for(const m of list){
+    const d=new Date(m.created_at),day=dayKey(d);
+    if(day!==lastDay){html+=`<div class="daychip"><span>${dayLabel(d)}</span></div>`;lastDay=day;lastSender=null}
+    const mine=m.sender===me.id,u=users.get(m.sender)||{id:m.sender,name:'?'};
+    const n=m.reads.size-(m.reads.has(m.sender)?1:0);
+    const rd=mine&&n>0?(room==='all'?`既読 ${n}`:'既読'):'';
+    const meta=`<div class="meta">${rd?`<div>${rd}</div>`:''}<div>${hhmm(d)}</div></div>`;
+    const inner=(m.image_url?`<img class="pic" data-src="${esc(m.image_url)}" src="${esc(m.image_url)}" alt="写真">`:'')+(m.body?`<div class="txt">${linkify(esc(m.body))}</div>`:'');
+    const bc=m.image_url&&!m.body?'bubble imgonly':'bubble';
+    if(mine)html+=`<div class="row mine">${meta}<div class="${bc}">${inner}</div></div>`;
+    else{const first=lastSender!==m.sender;
+      html+=`<div class="row other">${first?av(u,40):'<span class="avsp"></span>'}<div class="col">${first?`<div class="nm">${esc(u.name)}</div>`:''}<div class="line"><div class="${bc}">${inner}</div>${meta}</div></div></div>`}
+    lastSender=m.sender;
+  }
+  if(html===lastMsgHtml&&!force)return;
+  const atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<90;
+  box.innerHTML=html;lastMsgHtml=html;
+  if(force||atBottom)box.scrollTop=box.scrollHeight;
+}
+async function markRead(){
+  if(view!=='chat'||document.hidden||!me)return;
+  const todo=[...msgs.values()].filter(m=>m.room===room&&m.sender!==me.id&&!m.reads.has(me.id));
+  if(!todo.length)return;
+  todo.forEach(m=>m.reads.add(me.id));renderList();
+  await sb.from('g_reads').upsert(todo.map(m=>({message_id:m.id,user_id:me.id})),{onConflict:'message_id,user_id',ignoreDuplicates:true});
+}
+async function postMessage(rm,body,image_url){
+  const{data,error}=await sb.from('g_messages').insert({room:rm,sender:me.id,body,image_url:image_url||null}).select().single();
+  if(error)throw error;addMsg(data);return data;
+}
+async function send(){
+  const inp=$('#inp'),body=inp.value.trim();if(!body&&!pending)return;
+  const btn=$('#sendBtn');btn.disabled=true;
+  try{
+    let url=null;
+    if(pending){
+      const path=`${me.id}/${Date.now()}.jpg`;
+      const{error}=await sb.storage.from('g-images').upload(path,pending.blob,{contentType:'image/jpeg'});if(error)throw error;
+      url=sb.storage.from('g-images').getPublicUrl(path).data.publicUrl;
+    }
+    await postMessage(room,body,url);
+    inp.value='';autosize();clearPending();renderAll(true);
+  }catch(e){toast('送信できませんでした：'+(e.message||e))}
+  btn.disabled=false;inp.focus();
+}
+$('#lightbox').onclick=()=>$('#lightbox').style.display='none';
+
+/* ---------- profile ---------- */
+function editProfile(){
+  const st={avatar:me.avatar};
+  $('#mbox').innerHTML=`<h2 style="margin:0 0 14px;font-size:18px">プロフィールを編集</h2>
+  <label class="field"><span>名前</span><input type="text" id="enm" maxlength="16" value="${esc(me.name)}"></label>
+  <div class="field"><span>プロフィール画像</span><div id="epick"></div></div>
+  <p class="muted" id="eerr" style="color:#ff8a80;min-height:18px"></p>
+  <div class="btns"><button class="btn" id="esave">保存</button><button class="btn gray" id="ecancel">キャンセル</button></div>`;
+  $('#modal').style.display='flex';
+  mountPicker($('#epick'),st,()=>$('#enm').value.trim());
+  $('#ecancel').onclick=()=>$('#modal').style.display='none';
+  $('#esave').onclick=async()=>{
+    const name=$('#enm').value.trim();if(!name){$('#eerr').textContent='名前を入力してください';return}
+    const dup=[...users.values()].find(u=>u.id!==me.id&&u.name.toLowerCase()===name.toLowerCase());
+    if(dup){$('#eerr').textContent='その名前はすでに使われています';return}
+    const{error}=await sb.from('g_users').update({name,avatar:st.avatar}).eq('id',me.id);
+    if(error){$('#eerr').textContent='保存できませんでした：'+error.message;return}
+    me={...me,name,avatar:st.avatar};users.set(me.id,me);store.set('g_me',JSON.stringify(me));
+    $('#modal').style.display='none';lastListHtml='';renderAll(true);toast('保存しました');
+  };
+}
+$('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').style.display='none'};
+
+/* ---------- games ---------- */
+let gameSel=null;
+function showShare(){
+  view='share';chatBuilt=false;openMobile(true);lastListHtml='';renderList();
+  $('#right').innerHTML=`<div class="rhead"><button class="back" id="back">‹</button><div class="rtitle">ゲームを共有する</div></div>
+  <div class="panel"><div class="card">
+    <label class="field"><span>ゲームの名前</span><input type="text" id="gt" maxlength="40" placeholder="例：ブレイクスルーFPS"></label>
+    <label class="field"><span>ひとこと説明（なくてもOK）</span><input type="text" id="gd" maxlength="120" placeholder="例：矢印キーで動かすよ"></label>
+    <div class="seg"><label><input type="radio" name="gm" value="html" checked><span>HTMLファイル／コード</span></label><label><input type="radio" name="gm" value="url"><span>リンク（URL）</span></label></div>
+    <div id="gm-html">
+      <label class="btn gray" style="font-size:13px;padding:8px 14px;margin-bottom:10px">📁 HTMLファイルを選ぶ<input type="file" accept=".html,.htm,text/html" hidden id="gf"></label>
+      <label class="field"><span>またはコードをここに貼り付け</span><textarea id="gh" placeholder="&lt;!doctype html&gt;..."></textarea></label>
+    </div>
+    <label class="field" id="gm-url" style="display:none"><span>ゲームのURL</span><input type="url" id="gu" placeholder="https://..."></label>
+    <p class="muted" id="gerr" style="color:#ff8a80;min-height:18px"></p>
+    <div class="btns"><button class="btn" id="gsub">共有する</button></div>
+  </div></div>`;
+  $('#back').onclick=()=>openMobile(false);
+  document.querySelectorAll('[name=gm]').forEach(r=>r.onchange=()=>{const h=document.querySelector('[name=gm]:checked').value==='html';$('#gm-html').style.display=h?'block':'none';$('#gm-url').style.display=h?'none':'block'});
+  $('#gf').onchange=async e=>{const f=e.target.files[0];if(!f)return;$('#gh').value=await f.text();if(!$('#gt').value)$('#gt').value=f.name.replace(/\.[^.]+$/,'')};
+  $('#gsub').onclick=async()=>{
+    const title=$('#gt').value.trim(),desc=$('#gd').value.trim(),mode=document.querySelector('[name=gm]:checked').value;
+    const err=t=>$('#gerr').textContent=t;err('');
+    if(!title)return err('ゲームの名前を入れてください');
+    let url=null,html=null;
+    if(mode==='url'){url=$('#gu').value.trim();if(!/^https?:\/\//i.test(url))return err('https:// から始まるURLを入れてください')}
+    else{html=$('#gh').value;if(!html.trim())return err('HTMLファイルを選ぶか、コードを貼り付けてください');if(html.length>4e6)return err('ファイルが大きすぎます（4MBまで）')}
+    $('#gsub').disabled=true;
+    try{
+      const{data,error}=await sb.from('g_games').insert({title,description:desc,url,html,author:me.id}).select('id').single();if(error)throw error;
+      try{await postMessage('all',`🎮 ゲーム「${title}」を共有しました！\n左の「ゲーム」タブから遊べます`,null)}catch{}
+      await loadGames();openGame(data.id);toast('共有しました！');
+    }catch(e){err('共有できませんでした：'+(e.message||e));$('#gsub').disabled=false}
+  };
+}
+async function openGame(id){
+  view='game';gameSel=id;chatBuilt=false;openMobile(true);lastListHtml='';renderList();
+  $('#right').innerHTML='<div class="welcome">読み込み中…</div>';
+  const{data:g,error}=await sb.from('g_games').select('*').eq('id',id).single();
+  if(error||!g){$('#right').innerHTML='<div class="welcome">ゲームが見つかりません</div>';return}
+  const a=users.get(g.author);
+  const head=`<div class="rhead"><button class="back" id="back">‹</button><div class="rtitle">🎮 ${esc(g.title)}</div>${g.author===me.id?'<button class="btn red" id="gdel" style="padding:6px 14px;font-size:13px">削除</button>':''}</div>`;
+  if(g.html){
+    $('#right').innerHTML=head+`<div style="padding:8px 14px;font-size:13px;color:#cfd3df;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span>${esc(a?a.name:'')} さんが作成${g.description?'：'+esc(g.description):''}</span><button class="btn gray" id="gnew" style="padding:5px 12px;font-size:12px">新しいタブで開く</button></div><iframe class="gframe" id="gf2" allowfullscreen sandbox="allow-scripts allow-pointer-lock allow-popups allow-forms allow-modals allow-downloads"></iframe>`;
+    $('#gf2').srcdoc=g.html;
+    $('#gnew').onclick=()=>{const u=URL.createObjectURL(new Blob([g.html],{type:'text/html'}));window.open(u,'_blank')};
+  }else{
+    $('#right').innerHTML=head+`<div class="panel"><div class="card center"><div style="font-size:54px">🎮</div><h2 style="margin:6px 0">${esc(g.title)}</h2><p class="muted">${esc(a?a.name:'')} さんが共有</p>${g.description?`<p>${esc(g.description)}</p>`:''}<a class="btn" href="${esc(g.url)}" target="_blank" rel="noopener">ゲームを開く</a></div></div>`;
+  }
+  $('#back').onclick=()=>openMobile(false);
+  const d=$('#gdel');if(d)d.onclick=async()=>{
+    if(!confirm('このゲームを削除しますか？'))return;
+    const{error}=await sb.from('g_games').delete().eq('id',id);if(error)return toast('削除できませんでした');
+    await loadGames();gameSel=null;tab='games';showChat('all',false);
+  };
+}
+boot();
+</script>
+</body>
+</html>
